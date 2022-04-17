@@ -3,6 +3,7 @@
 
 # But not these files...
 !/.gitignore
+!.gitkeep
 
 !*.go
 !go.sum
@@ -16,3 +17,6 @@
 
 # ...even if they are in subdirectories
 !*/
+
+graph/generated/*
+graph/model/generated.go
