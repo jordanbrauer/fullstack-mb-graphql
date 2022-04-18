@@ -8,8 +8,14 @@ import (
 	"fullstackmb/graph/generated"
 )
 
-func (r *mutationResolver) Pong(ctx context.Context) (string, error) {
-	return "ping", nil
+func (r *mutationResolver) Sum(ctx context.Context, numbers []int) (int, error) {
+	var sum int
+
+	for _, operand := range numbers {
+		sum += operand
+	}
+
+	return sum, nil
 }
 
 func (r *queryResolver) Ping(ctx context.Context) (string, error) {
