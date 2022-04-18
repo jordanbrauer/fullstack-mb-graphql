@@ -27,7 +27,4 @@ types: ## Generate types from the GraphQL schema
 	@go run github.com/99designs/gqlgen generate ./..
 
 slides:
-	@lookatme --live --style stata-dark SLIDES.md
-
-present:
-	@lookatme --style stata-dark SLIDES.md
+	@slides SLIDES.md
