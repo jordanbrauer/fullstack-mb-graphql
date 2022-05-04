@@ -7,16 +7,11 @@ date: MMMM dd, YYYY
 
 My name is Jordan Brauer
 
-I've been doing software for a few years —
+I've been doing software for a few years both professionally, and as a hobby.
 
-- ~10 years unproffesionally as a young lad
-- ~6 years professionally
-
-
-1. 2.0 Ma & pa, freelance
-2. 3.5 Pepper (Tipping Canoe)
-3. 0.5 Gubagoo
-4. 0.5 Neo Financial
+1. Pepper (Tipping Canoe)
+2. Gubagoo
+3. Neo Financial
 
 - _GitHub_ as [@jordanbrauer](https://github.com/jordanbrauer)
 - _Twitter_ as [@jorbandrauer](https://twitter.com/jorbandrauer)
@@ -143,6 +138,12 @@ _yields_
 
 ---
 
+##### What About `<Insert HTTP Method Here>`?
+
+_No_, but...
+
+---
+
 # (￣～￣;) Where is GraphQL Used?
 
 Everywhere!
@@ -170,25 +171,26 @@ Any time you are making an API!
 
 # ヽ(ᵔ.ᵔ(・_・ )ゝ Why Should I Use GraphQL?
 
-## ┐( ˘_˘ )┌
-
-- strongly (statically) typed
-- no more DSLs based on a case of NIHS
-- free validation & less conditional boilerplate in code
-- facilitates communication across the full stack (FE <-> BE)
-- introspection
-- first class documentation
-- fetch only what you need ("over-fetching")
-- federation promotes microservices
+- strongly **(statically) typed**
+- **no more DSLs** based on a case of NIHS
+- **free validation** & less conditional boilerplate in code
+- facilitates **communication across the full stack** (FE <-> BE)
+- first class, **built-in documentation** (introspection)
+- **no more "over-fetching"**, fetch only what you need
+- federation **promotes microservices**
 
 ---
 
 ## Types, Scalars, and Enums; _Oh My_!
 
+GraphQL offers a few core constructs for defining your schema types. The primary
+one being `type`!
+
 ```graphql
 type Character {
   name: String!
   appearsIn: [Episode!]!
+  deceasedAt: String     # optional
 }
 ```
 
@@ -196,7 +198,8 @@ type Character {
 
 ### Scalars
 
-**Five** built-in scalar types
+The GraphQL type system is quite primitive, providing only a few constructs and
+built-in scalar types of which there are five
 
 - `Int`
 - `Float`
@@ -204,30 +207,33 @@ type Character {
 - `Boolean`
 - `ID`
 
-With most reference implementations offering the ability to define your own
+With most reference implementations offering the ability to define your own.
+
+---
 
 ##### Custom Scalars
+
+In the schema
 
 ```graphql
 scalar Date
 ```
 
+and in our implementation language of choice
+
 ```php
 class Date extends Scalar
 {
-    public function serialize($value)
-    {
+    public function serialize($value) {
         return $this->parseValue($value);
     }
 
-    public function parseValue($value)
-    {
-        return $value;
+    public function parseValue($value) {
+        return $value->format('Y/M/D H:m:s');
     }
 
-    public function parseLiteral(Node $node, ?array $variables = null)
-    {
-        return $node->value;
+    public function parseLiteral(Node $node, ?array $variables = null) {
+        return new DateTime($node->value);
     }
 }
 ```
@@ -236,11 +242,19 @@ class Date extends Scalar
 
 ### Enums
 
+Ultimately resolve as string values in the JSON output.
+
 ```graphql
 enum Episode {
-    NEWHOPE
-    EMPIRE
-    JEDI
+    NewHope
+    Empire
+    Jedi
+    PhantomMenace
+    CloneWars
+    Sith
+    ForceAwakens
+    LastJedi
+    Rise
 }
 ```
 
@@ -248,28 +262,28 @@ enum Episode {
 
 ### Interfaces
 
+Ensure that types are defining a particular set of fields.
+
 ```graphql
-interface Character {
+interface Node {
     id: ID!
-    name: String!
-    friends: [Character]!
-    appearsIn: [Episode]!
 }
 
-type Human implements Character {
+type Human implements Node {
   id: ID!
   name: String!
-  friends: [Character]
-  appearsIn: [Episode]!
-  starships: [Starship]
+  friends: [Character!]!
+  appearsIn: [Episode!]!
+  starships: [Starship!]!
   totalCredits: Int
+  homeworld: Planet!
 }
 
-type Droid implements Character {
+type Droid implements Node {
   id: ID!
   name: String!
-  friends: [Character]
-  appearsIn: [Episode]!
+  friends: [Character!]!
+  appearsIn: [Episode!]!
   primaryFunction: String
 }
 ```
@@ -278,13 +292,40 @@ type Droid implements Character {
 
 ### Unions
 
+The schema defines a union for search results
+
 ```graphql
 union SearchResult = Human | Droid | Starship
+```
+
+our query might look something like this
+
+```graphql
+query Search {
+    search(query: "skywalker") {
+        ... on Human {
+            name
+            totalCredits
+        }
+        ... on Droid {
+            name
+            primaryFunction
+        }
+        ... on Starship {
+            name
+            owner {
+                name
+            }
+        }
+    }
+}
 ```
 
 ---
 
 ### Inputs
+
+What about complex inputs? Do `type`s work?
 
 ```graphql
 input CustomerReview {
@@ -293,7 +334,7 @@ input CustomerReview {
 }
 ```
 
-client uses it like
+And using it in a mutation would look like this with variables
 
 ```graphql
 mutation ReviewEpisode($ep: Episode!, $review: CustomerReview!) {
@@ -318,7 +359,7 @@ mutation ReviewEpisode($ep: Episode!, $review: CustomerReview!) {
 
 ## First-Class Documentation
 
-No more Swagger!
+No more Swagger, OpenAPI, et al.
 
 ```graphql
 type User {
@@ -327,21 +368,17 @@ type User {
     [RFC4122](https://datatracker.ietf.org/doc/html/rfc4122) compliant UUIDv4.
     """
     id: ID!
-
     """
     A unique handle (or "username") chosen by the user at signup. This value
     **SHOULD NOT** be relied upon as it can change at anytime at the descretion
     of the user.
     """
     alias: String!
-    
     """
     A UNIX timestamp indicating when the user joined the service. See also
     `verifiedAt`.
     """
     joinedAt: Int!
-
-    # ...
 }
 ```
 
@@ -349,9 +386,11 @@ type User {
 
 # ┐('～`;)┌ Resolvers
 
-- resolvers are basically (though not really) controllers
-- they all receive the same 4, positional arguments
+> How do we wire data up to the schema?
+
 - represents a node/field/edge on the graph
+- resolvers are _basically_ (though not really) controllers
+- (depending on reference implementation) they all receive the same 4, positional arguments
 
 ```php
 function (mixed $parent, array $args, Context $context, ResolveInfo $info) {
@@ -359,54 +398,53 @@ function (mixed $parent, array $args, Context $context, ResolveInfo $info) {
 };
 ```
 
-- parent (root)
-- arguments
-- context
-- info
+1. `parent`   – parent ("root") data for your current resolver
+2. `args`     – all input arguments for your resolver field
+3. `context`  – shared information between _all_ resolvers
+4. `info`     – information about the query and current location in the graph
 
 ---
 
-# ~(>_<~) Authentication & Authorization
+# ..・ヾ(。＞＜)シ Demo Time
 
-In GraphQL, auth (authorization _and_ authentication) is a completely separate
-layer and is meant to be implemented by you based on your business & technical
-requirements;
-
-```
-Protocol:  |    HTTP     |
-           ------ v ------
-           |    Auth     |  <- B.Y.O.B
-           ------ v ------
-     Api:  |   GraphQL   |
-           ------ v ------
-           |     App     |
-```
-
----
-
-# (b ᵔ▽ᵔ)b Code Generation
-
-- front-end (typescript)
-- back-end (Go)
-- documentation, editor auto-complete
-
----
-
-# .･ﾟﾟ･(／ω＼)･ﾟﾟ･. Error Handling
-
-- HTTP errors are different than GraphQL errors
-    - e.g., 404 should only happen if your GraphQL route cannot be found
+### ‿︵‿︵‿︵‿ヽ(°□° )ノ︵‿︵‿︵‿︵
 
 ---
 
 # ٩(× ×)۶ The n+1 Problem
 
-- dataloader pattern (made by Facebook)
-- essentially a buffer of resource IDs to then be loaded all at once
+Imagine your graph has the ability to query a list of comments and their author
+
+```graphql
+query Comments {
+    comments {
+        author {
+            name
+        }
+    }
+}
+```
+
+If we receive `n` comments back, the query executor will invoke `n` database
+queries for the author, resulting in `n+1` calls. 
+
+_dataloader to the rescue!_
+
+```js
+const keys = [1, 5, 3, 5, 5] // each resolver contributes a key to load
+const load = (id) => {       // the loader will excute once and use the map to resolve fields
+    authors.in(keys).reduce((authors, author) => {
+        return {
+            ...authors,
+            [author.id]: author,
+        }
+    }, {})
+}
+```
 
 ---
 
-# Batched Queries
+# Too Many Requests
 
 > Won't someone think of the ~~children~~ network!
 
@@ -441,10 +479,52 @@ Content-Type: application/json
 
 ---
 
+# (b ᵔ▽ᵔ)b Code Generation
+
+- front-end (typescript)
+- documentation, editor auto-complete
+
+---
+
+# ~(>_<~) Authentication & Authorization
+
+In GraphQL, auth (authorization _and_ authentication) is a completely separate
+layer and is meant to be implemented by you based on your business & technical
+requirements;
+
+```
+Protocol:  |    HTTP     |
+           ------ v ------
+           |    Auth     |  <- B.Y.O.B
+           ------ v ------
+     Api:  |   GraphQL   |
+           ------ v ------
+           |     App     |
+```
+
+> _the same applies for for pagination and query constraints!_
+
+---
+
+# .･ﾟﾟ･(／ω＼)･ﾟﾟ･. Error Handling
+
+- HTTP errors are different than GraphQL errors
+    - e.g., 404 should only happen if your GraphQL route cannot be found
+- graph will resolve as much as it can
+
+---
+
 # (*￣▽￣)b Microservices & Federation
 
 - monolith has 1 giant schema (schema stitching)
 - compose a graph from many microservices (gateway)
+    - can load balance each service independently
+    - gateway can be loadbalanced too!
+- we use federation at Neo
+
+`<load-balancing.png>`
+
+`<fedartion.png>`
 
 ---
 
@@ -453,21 +533,16 @@ Content-Type: application/json
 - learning curve – totally different paradigm
 - performance – schema & query parsing overhead
 - messy/unorganized – requires (cross-team) discipline
+- familiarity for public APIs might be low
 
 ---
 
-# ..・ヾ(。＞＜)シ Demo Time
-
-### ‿︵‿︵‿︵‿ヽ(°□° )ノ︵‿︵‿︵‿︵
-
----
-
-# Recap/Key things
+# ┐( ˘_˘ )┌ Recap/Key things
 
 - there is no `SELECT *`, only fields
 - resolvers are functions which return (scalar or structured) data for a field in the graph
 - the schema represents your business domain, not the application (business language, not jargon)
-- federation & microservices let you compose a graph where each service is a contributer to the graph
+- federation lets you compose a graph where each service is a contributer to the graph
 
 ---
 
@@ -475,16 +550,20 @@ Content-Type: application/json
 
 You can find the code for this talk on GitHub at
 
-- [craig/rest](https://github.com)
 - [jordanbrauer/fullstack-mb-graphql](https://github.com/jordanbrauer/fullstack-mb-graphql)
   - _this slide deck can be found here ^ in_ `SLIDES.md`
-- [jordanbrauer/fullstack-mb-ui](https://github.com/jordanbrauer/fullstack-mb-ui)
 
-and once again, I am on –
+and once again, you can find me on
 
 - _GitHub_ as [@jordanbrauer](https://github.com/jordanbrauer)
 - _Twitter_ as [@jorbandrauer](https://twitter.com/jorbandrauer)
 - _Instagram_ as [@jorbandrauer](https://instagram.com/jorbandrauer)
+
+---
+
+# (・・ )? Questions
+
+...
 
 ## Resources
 
@@ -492,26 +571,30 @@ and once again, I am on –
 - [Introduction to GraphQL](https://graphql.org/learn/)
 - [Global Object Identification](https://graphql.org/learn/global-object-identification/)
 
-## (・・ )? Questions
+---
+
+## Pop Quiz!
+
+GraphQL allows you to query your database from your browser? (T/F)
 
 ---
 
-> REMOVE ME BEFORE FINAL DRAFT
+## Pop Quiz!
 
-# Speaker Notes
+REST is a terrible way to create an API (T/F)
 
-- show a hello world example and explain resolvers;
-- show transition from REST to GraphQL by masking the REST API with GraphQL;
-- monolith vs. microservice & service-to-services calls/direct DB;
+---
 
-- it's a spec to be implemented in whatever language you choose;
-- what is this solving?;
-  - vs. REST approach (over fetch, fetching many resources);
-  - scaling the API (microservices & service to service calls, etc.);
-  - start REST and show what problems GraphQL solves;
-  - services all speak common GraphQL
+## Pop Quiz!
 
-## Advanced Topics
+What is the n+1 problem?
 
-- apollo adds to GraphQL with plugins and federation;
-- subscriptions (realtime w/ socket);
+---
+
+## Pop Quiz!
+
+Apollo and GraphQL are the same (T/F)
+
+---
+
+_Thank You_
