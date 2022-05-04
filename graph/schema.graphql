@@ -3,6 +3,16 @@ type Query {
     _Pong!_
     """
     ping: String!
+
+    """
+    List all of the Star Wars movies.
+    """
+    films: [Film!]!
+
+    """
+    Query for Star Wars characters across all movies.
+    """
+    characters: [Character!]!
 }
 
 type Mutation {
@@ -10,4 +20,102 @@ type Mutation {
     Add 0 or more integers together.
     """
     sum(numbers: [Int!]!): Int!
+}
+
+"""
+An entry in the main-line Star Wars movie franchise.
+"""
+type Film {
+    """
+    A unique, auto-incrementing ID assigned to each movie as they are released.
+    """
+    id: Int!
+
+    """
+    The film's theatric title.
+    """
+    title: String!
+
+    """
+    The chronological order of the film in relation to all the others.
+    """
+    episode: Int!
+
+    """
+    A series of one or more paragraphs which are scrolled across space and time
+    in big yellow letters.
+    """
+    crawl: String!
+
+    """
+    Name of the director in charge of the movie.
+    """
+    director: String!
+
+    """
+    A list of producers that worked on the film.
+    """
+    producers: [String!]!
+
+    """
+    All known characters that appear in the film.
+    """
+    characters: [Character!]
+
+    """
+    Theatric release date of the movie.
+    """
+    releasedAt: String!
+}
+
+type Character {
+    """
+    The given, full name of a character.
+    """
+    name: String!
+
+    """
+    The character's height in centimetres.
+    """
+    height: String!
+
+    """
+    The character's weight in kilograms.
+    """
+    weight: String!
+
+    """
+    The year which a character was born in.
+    """
+    bornAt: String!
+
+    """
+    The character's gender (if known or possible).
+    """
+    gender: Gender!
+}
+
+"""
+All known genders in the galaxy.
+"""
+enum Gender {
+    """
+    No gender? You're probably a droid.
+    """
+    None
+
+    """
+    Male, men, man, boy... You know, dudes!
+    """
+    Male
+
+    """
+    Female, women, woman, girl... You know, ladies!
+    """
+    Female
+
+    """
+    Both!
+    """
+    Hermaphrodite
 }
