@@ -1,7 +1,13 @@
 type Query {
+    """
+    _Pong!_
+    """
     ping: String!
 }
 
 type Mutation {
+    """
+    Add 0 or more integers together.
+    """
     sum(numbers: [Int!]!): Int!
 }
