@@ -118,6 +118,21 @@ type Character {
     The character's gender (if known or possible).
     """
     gender: Gender!
+
+    """
+    The planet where a character was born.
+    """
+    homeworld: Planet!
+}
+
+"""
+A known world in the galaxy.
+"""
+type Planet {
+    """
+    The common name for a planet used by everyone around the galaxy.
+    """
+    name: String!
 }
 
 """

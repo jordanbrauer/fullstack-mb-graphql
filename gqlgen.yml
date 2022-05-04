@@ -47,6 +47,10 @@ models:
     fields:
       characters:
         resolver: true
+  Character:
+    fields:
+      homeworld:
+        resolver: true
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID

@@ -7,9 +7,16 @@ import (
 	"context"
 	"fullstackmb/app/characters"
 	"fullstackmb/app/films"
+	"fullstackmb/app/planets"
 	"fullstackmb/graph/generated"
 	"fullstackmb/graph/model"
 )
+
+func (r *characterResolver) Homeworld(ctx context.Context, obj *model.Character) (*model.Planet, error) {
+	planet, err := planets.Find(obj.HomeworldID)
+
+	return new(model.Planet).Fill(planet), err
+}
 
 func (r *filmResolver) Characters(ctx context.Context, obj *model.Film) ([]*model.Character, error) {
 	nodes := []*model.Character{}
@@ -80,6 +87,9 @@ func (r *queryResolver) Characters(ctx context.Context) ([]*model.Character, err
 	return nodes, nil
 }
 
+// Character returns generated.CharacterResolver implementation.
+func (r *Resolver) Character() generated.CharacterResolver { return &characterResolver{r} }
+
 // Film returns generated.FilmResolver implementation.
 func (r *Resolver) Film() generated.FilmResolver { return &filmResolver{r} }
 
@@ -89,6 +99,7 @@ func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResol
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+type characterResolver struct{ *Resolver }
 type filmResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

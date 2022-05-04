@@ -35,6 +35,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Character() CharacterResolver
 	Film() FilmResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
@@ -45,11 +46,12 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Character struct {
-		BornAt func(childComplexity int) int
-		Gender func(childComplexity int) int
-		Height func(childComplexity int) int
-		Name   func(childComplexity int) int
-		Weight func(childComplexity int) int
+		BornAt    func(childComplexity int) int
+		Gender    func(childComplexity int) int
+		Height    func(childComplexity int) int
+		Homeworld func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Weight    func(childComplexity int) int
 	}
 
 	Film struct {
@@ -73,6 +75,10 @@ type ComplexityRoot struct {
 		Sum func(childComplexity int, numbers []int) int
 	}
 
+	Planet struct {
+		Name func(childComplexity int) int
+	}
+
 	Query struct {
 		Characters func(childComplexity int) int
 		Films      func(childComplexity int) int
@@ -81,6 +87,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type CharacterResolver interface {
+	Homeworld(ctx context.Context, obj *model.Character) (*model.Planet, error)
+}
 type FilmResolver interface {
 	Characters(ctx context.Context, obj *model.Film) ([]*model.Character, error)
 }
@@ -129,6 +138,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Character.Height(childComplexity), true
+
+	case "Character.homeworld":
+		if e.complexity.Character.Homeworld == nil {
+			break
+		}
+
+		return e.complexity.Character.Homeworld(childComplexity), true
 
 	case "Character.name":
 		if e.complexity.Character.Name == nil {
@@ -232,6 +248,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.Sum(childComplexity, args["numbers"].([]int)), true
+
+	case "Planet.name":
+		if e.complexity.Planet.Name == nil {
+			break
+		}
+
+		return e.complexity.Planet.Name(childComplexity), true
 
 	case "Query.characters":
 		if e.complexity.Query.Characters == nil {
@@ -445,6 +468,21 @@ type Character {
     The character's gender (if known or possible).
     """
     gender: Gender!
+
+    """
+    The planet where a character was born.
+    """
+    homeworld: Planet!
+}
+
+"""
+A known world in the galaxy.
+"""
+type Planet {
+    """
+    The common name for a planet used by everyone around the galaxy.
+    """
+    name: String!
 }
 
 """
@@ -720,6 +758,41 @@ func (ec *executionContext) _Character_gender(ctx context.Context, field graphql
 	res := resTmp.(model.Gender)
 	fc.Result = res
 	return ec.marshalNGender2fullstackmbᚋgraphᚋmodelᚐGender(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Character_homeworld(ctx context.Context, field graphql.CollectedField, obj *model.Character) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Character",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Character().Homeworld(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Planet)
+	fc.Result = res
+	return ec.marshalNPlanet2ᚖfullstackmbᚋgraphᚋmodelᚐPlanet(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Film_id(ctx context.Context, field graphql.CollectedField, obj *model.Film) (ret graphql.Marshaler) {
@@ -1144,6 +1217,41 @@ func (ec *executionContext) _Mutation_sum(ctx context.Context, field graphql.Col
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Planet_name(ctx context.Context, field graphql.CollectedField, obj *model.Planet) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Planet",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_ping(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2569,7 +2677,7 @@ func (ec *executionContext) _Character(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "height":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -2579,7 +2687,7 @@ func (ec *executionContext) _Character(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "weight":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -2589,7 +2697,7 @@ func (ec *executionContext) _Character(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "bornAt":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -2599,7 +2707,7 @@ func (ec *executionContext) _Character(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "gender":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -2609,8 +2717,28 @@ func (ec *executionContext) _Character(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "homeworld":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Character_homeworld(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2806,6 +2934,37 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var planetImplementors = []string{"Planet"}
+
+func (ec *executionContext) _Planet(ctx context.Context, sel ast.SelectionSet, obj *model.Planet) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, planetImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Planet")
+		case "name":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Planet_name(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -3572,6 +3731,20 @@ func (ec *executionContext) marshalNInt2ᚕintᚄ(ctx context.Context, sel ast.S
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNPlanet2fullstackmbᚋgraphᚋmodelᚐPlanet(ctx context.Context, sel ast.SelectionSet, v model.Planet) graphql.Marshaler {
+	return ec._Planet(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPlanet2ᚖfullstackmbᚋgraphᚋmodelᚐPlanet(ctx context.Context, sel ast.SelectionSet, v *model.Planet) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Planet(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
