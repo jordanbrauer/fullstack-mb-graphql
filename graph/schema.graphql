@@ -5,6 +5,11 @@ type Query {
     ping: String!
 
     """
+    Query the server state and metadata.
+    """
+    server: Info!
+
+    """
     List all of the Star Wars movies.
     """
     films: [Film!]!
@@ -20,6 +25,26 @@ type Mutation {
     Add 0 or more integers together.
     """
     sum(numbers: [Int!]!): Int!
+}
+
+"""
+Meta data about the service
+"""
+type Info {
+    """
+    The name of the service
+    """
+    name: String!
+
+    """
+    The currently running version in semver.
+    """
+    version: String!
+
+    """
+    Are things up and working? Useful for status pages.
+    """
+    running: Boolean!
 }
 
 """

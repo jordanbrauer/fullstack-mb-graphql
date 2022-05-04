@@ -8,6 +8,16 @@ import (
 	"strconv"
 )
 
+// Meta data about the service
+type Info struct {
+	// The name of the service
+	Name string `json:"name"`
+	// The currently running version in semver.
+	Version string `json:"version"`
+	// Are things up and working? Useful for status pages.
+	Running bool `json:"running"`
+}
+
 // All known genders in the galaxy.
 type Gender string
 

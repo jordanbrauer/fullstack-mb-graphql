@@ -6,6 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.2
 	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/vektah/gqlparser/v2 v2.4.0
+	gopkg.in/ini.v1 v1.66.4
 )
 
 require (
