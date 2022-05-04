@@ -1,6 +1,9 @@
 package planets
 
-import "fullstackmb/app"
+import (
+	"fullstackmb/app"
+	"log"
+)
 
 type Schema struct {
 	ID   int
@@ -33,6 +36,8 @@ func Find(id int) (*Schema, error) {
 			return planet, err
 		}
 	}
+
+	log.Printf("Queried planet %d,%s", planet.ID, planet.Name)
 
 	return planet, nil
 }

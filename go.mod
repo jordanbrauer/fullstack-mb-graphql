@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/99designs/gqlgen v0.17.2
+	github.com/graph-gophers/dataloader v5.0.0+incompatible
 	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/vektah/gqlparser/v2 v2.4.0
 	gopkg.in/ini.v1 v1.66.4
@@ -16,6 +17,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.0 // indirect
 	github.com/matryer/moq v0.2.3 // indirect
 	github.com/mitchellh/mapstructure v1.2.3 // indirect
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	golang.org/x/mod v0.5.1 // indirect

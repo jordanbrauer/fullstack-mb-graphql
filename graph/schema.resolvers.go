@@ -14,6 +14,7 @@ import (
 
 func (r *characterResolver) Homeworld(ctx context.Context, obj *model.Character) (*model.Planet, error) {
 	planet, err := planets.Find(obj.HomeworldID)
+	// planet, err := planets.Load(ctx, obj.HomeworldID)
 
 	return new(model.Planet).Fill(planet), err
 }
